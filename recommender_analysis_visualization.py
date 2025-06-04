@@ -7,6 +7,10 @@ import seaborn as sns
 from collections import defaultdict
 import shutil
 
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+os.environ["SPARK_LOCAL_IP"] = "172.23.233.141"
+
 # Cell: Import libraries and set up environment
 """
 # Recommender Systems Analysis and Visualization
@@ -444,16 +448,27 @@ def run_recommender_analysis():
     Now we'll set up and evaluate different recommendation algorithms.
     """
     
+    from KNN import KNNRecommender 
+
     # Initialize recommenders to compare
-    recommenders = [
+    """recommenders = [
         SVMRecommender(seed=42), 
         RandomRecommender(seed=42),
         PopularityRecommender(alpha=1.0, seed=42),
         ContentBasedRecommender(similarity_threshold=0.0, seed=42),
-        MyRecommender(seed=42)  # Add your custom recommender here
+        KNNRecommender(seed=42)  # Add your custom recommender here
     ]
-    recommender_names = ["SVM", "Random", "Popularity", "ContentBased", "MyRecommender"]
+    recommender_names = ["SVM", "Random", "Popularity", "ContentBased", "KNN"]"""
     
+    recommenders = [
+        KNNRecommender(seed=42),
+        RandomRecommender(seed=42),
+        PopularityRecommender(alpha=1.0, seed=42),
+        ContentBasedRecommender(similarity_threshold=0.0, seed=42),
+    ]
+
+    recommender_names = ["KNN", "Random", "Popularity", "ContentBased"]
+
     # Initialize recommenders with initial history
     for recommender in recommenders:
         recommender.fit(log=data_generator.history_df, 
