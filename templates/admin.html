@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - CS145 Competition{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h3 class="mb-0"><i class="fas fa-cog"></i> Admin Dashboard</h3>
+                <div>
+                    <span class="badge bg-light text-dark">{{ results|length }} Total Submissions</span>
+                    <button class="btn btn-light btn-sm ms-2" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if results %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 60px;">ID</th>
+                                    <th>Team Name</th>
+                                    <th>Email</th>
+                                    <th>Filename</th>
+                                    <th>Status</th>
+                                    <th>Test Discounted Revenue</th>
+                                    <th>Submission Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr class="{% if result[6] == 'error' %}table-danger{% elif result[6] == 'success' %}table-success{% endif %}">
+                                    <td class="fw-bold">{{ result[0] }}</td>
+                                    <td>{{ result[1] }}</td>
+                                    <td class="small">{{ result[2] }}</td>
+                                    <td class="small"><code>{{ result[4] }}</code></td>
+                                    <td>
+                                        {% if result[6] == 'success' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Success
+                                            </span>
+                                        {% elif result[6] == 'error' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times"></i> Error
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result[5] %}
+                                            <span class="metric-value">{{ "%.4f"|format(result[5]) }}</span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ result[3] }}</td>
+                                    <td>
+                                        {% if result[6] == 'error' and result[7] %}
+                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#errorModal" data-error-id="{{ result[0] }}" data-error-team="{{ result[1] }}" data-error-message="{{ result[7]|replace('"', '&quot;') }}">
+                                                <i class="fas fa-exclamation-triangle"></i> View Error
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Submissions Yet</h4>
+                        <p class="text-muted">Submissions will appear here when students start uploading their solutions.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<!-- Summary Statistics -->
+<div class="row mt-4">
+    <div class="col-md-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ results|length }}</h3>
+                <p class="mb-0 small">Total Submissions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ results|selectattr(6, "equalto", "success")|list|length }}</h3>
+                <p class="mb-0 small">Successful</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-danger">{{ results|selectattr(6, "equalto", "error")|list|length }}</h3>
+                <p class="mb-0 small">Failed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ results|selectattr(6, "equalto", "pending")|list|length }}</h3>
+                <p class="mb-0 small">Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-info">{{ results|map(attribute=1)|list|unique|list|length }}</h3>
+                <p class="mb-0 small">Unique Teams</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-secondary">{{ results|map(attribute=2)|list|unique|list|length }}</h3>
+                <p class="mb-0 small">Unique Emails</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Common Errors Analysis -->
+{% set error_submissions = results|selectattr(6, "equalto", "error")|list %}
+{% if error_submissions %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Common Error Patterns</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Most Recent Errors:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for error in error_submissions[:5] %}
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ error[1] }}</div>
+                                    <small class="text-muted">{{ error[7][:100] }}{% if error[7]|length > 100 %}...{% endif %}</small>
+                                </div>
+                                <small class="text-muted">{{ error[3] }}</small>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Success Rate by Team:</h6>
+                        {% set team_stats = {} %}
+                        {% for submission in results %}
+                            {% set team = submission[1] %}
+                            {% if team not in team_stats %}
+                                {% set _ = team_stats.update({team: {'total': 0, 'success': 0}}) %}
+                            {% endif %}
+                            {% set _ = team_stats[team].update({'total': team_stats[team]['total'] + 1}) %}
+                            {% if submission[6] == 'success' %}
+                                {% set _ = team_stats[team].update({'success': team_stats[team]['success'] + 1}) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Team</th>
+                                        <th>Success Rate</th>
+                                        <th>Attempts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for team, stats in team_stats.items() %}
+                                    <tr>
+                                        <td>{{ team }}</td>
+                                        <td>
+                                            {% set rate = (stats.success / stats.total * 100) if stats.total > 0 else 0 %}
+                                            <span class="badge {% if rate == 100 %}bg-success{% elif rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                {{ "%.0f"|format(rate) }}%
+                                            </span>
+                                        </td>
+                                        <td>{{ stats.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Error Details Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">Error Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Team: <span id="errorTeam"></span></h6>
+                <h6>Error Message:</h6>
+                <pre class="bg-light p-3 rounded" id="errorMessage" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    location.reload();
+}, 30000);
+
+// Handle error modal
+document.addEventListener('DOMContentLoaded', function() {
+    const errorModal = document.getElementById('errorModal');
+    if (errorModal) {
+        errorModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const teamName = button.getAttribute('data-error-team');
+            const errorMessage = button.getAttribute('data-error-message');
+            
+            document.getElementById('errorTeam').textContent = teamName;
+            document.getElementById('errorMessage').textContent = errorMessage;
+        });
+    }
+});
+
+// Filter functionality
+function filterTable(status) {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+        } else {
+            const statusBadge = row.querySelector('.badge');
+            if (statusBadge && statusBadge.textContent.toLowerCase().includes(status)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+}
+</script>
+{% endblock %} 

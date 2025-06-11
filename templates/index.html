@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Your Recommender - CS145 Competition{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Upload Form -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-upload"></i> Submit Your Recommender</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="team_name" class="form-label">Team Name *</label>
+                        <input type="text" class="form-control" id="team_name" name="team_name" required>
+                        <div class="form-text">Choose a unique team name for the leaderboard</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address *</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="form-text">We'll use this to contact you if needed</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Submission File *</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".py" required>
+                        <div class="form-text">Upload your <code>submission.py</code> file (max 16MB)</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-rocket"></i> Submit & Evaluate
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Submission Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Your file must be named exactly <code>submission.py</code></li>
+                    <li>Implement your recommender as <code>MyRecommender</code> class</li>
+                    <li>Follow the template structure provided in the course materials</li>
+                    <li>Rankings are based on <strong>test_discounted_revenue</strong> metric</li>
+                    <li>Evaluation may take several minutes to complete</li>
+                    <li>Check the leaderboard for your results</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Performers Preview -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-trophy"></i> Top Performers</h4>
+                <a href="{{ url_for('leaderboard') }}" class="btn btn-light btn-sm">View Full Leaderboard</a>
+            </div>
+            <div class="card-body" id="top-performers">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading leaderboard...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Competition Stats</h5>
+            </div>
+            <div class="card-body" id="stats">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h3 class="text-primary mb-1" id="total-submissions">-</h3>
+                        <small class="text-muted">Total Submissions</small>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="text-success mb-1" id="successful-submissions">-</h3>
+                        <small class="text-muted">Successful</small>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="text-warning mb-1" id="unique-teams">-</h3>
+                        <small class="text-muted">Unique Teams</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How it Works -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="fas fa-cogs"></i> How It Works</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-file-upload fa-3x text-primary"></i>
+                        </div>
+                        <h5>1. Upload</h5>
+                        <p>Submit your <code>submission.py</code> file with your custom MyRecommender implementation.</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-server fa-3x text-info"></i>
+                        </div>
+                        <h5>2. Evaluate</h5>
+                        <p>Our server runs your recommender against the standardized test dataset using train-test split.</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-chart-line fa-3x text-success"></i>
+                        </div>
+                        <h5>3. Rank</h5>
+                        <p>Results are ranked by <strong>test_discounted_revenue</strong> - the key performance metric.</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-trophy fa-3x text-warning"></i>
+                        </div>
+                        <h5>4. Compete</h5>
+                        <p>See your position on the leaderboard and compete with your classmates!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh leaderboard preview
+function loadTopPerformers() {
+    fetch('/api/leaderboard')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('top-performers');
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No submissions yet. Be the first!</p>';
+                updateStats(0, 0, 0);
+                return;
+            }
+            
+            const topFive = data.slice(0, 5);
+            let html = '<div class="table-responsive"><table class="table table-sm">';
+            html += '<thead><tr><th>Rank</th><th>Team</th><th>Score</th></tr></thead><tbody>';
+            
+            topFive.forEach((entry, index) => {
+                const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                const trophy = index === 0 ? '<i class="fas fa-crown text-warning"></i> ' : 
+                              index === 1 ? '<i class="fas fa-medal text-secondary"></i> ' :
+                              index === 2 ? '<i class="fas fa-medal text-warning"></i> ' : '';
+                
+                html += `<tr class="${rankClass}">
+                    <td>${trophy}${entry.rank}</td>
+                    <td>${entry.team_name}</td>
+                    <td class="metric-value">${entry.test_discounted_revenue.toFixed(4)}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+            
+            // Update stats
+            const successful = data.filter(entry => entry.status === 'success').length;
+            const uniqueTeams = new Set(data.map(entry => entry.team_name)).size;
+            updateStats(data.length, successful, uniqueTeams);
+        })
+        .catch(error => {
+            document.getElementById('top-performers').innerHTML = 
+                '<p class="text-danger text-center">Error loading leaderboard</p>';
+            console.error('Error:', error);
+        });
+}
+
+function updateStats(total, successful, unique) {
+    document.getElementById('total-submissions').textContent = total;
+    document.getElementById('successful-submissions').textContent = successful;
+    document.getElementById('unique-teams').textContent = unique;
+}
+
+// Load on page load and refresh every 30 seconds
+document.addEventListener('DOMContentLoaded', loadTopPerformers);
+setInterval(loadTopPerformers, 30000);
+</script>
+{% endblock %} 

@@ -4,7 +4,7 @@ import pandas as pd
 from pyspark.sql import SparkSession
 from pyspark.sql import DataFrame
 
-from sim4rec.modules import RealDataGenerator, SDVDataGenerator, CompositeGenerator
+from sim4rec.modules import RealDataGenerator, CompositeGenerator
 from sim4rec.utils import pandas_to_spark
 
 class CompetitionDataGenerator:

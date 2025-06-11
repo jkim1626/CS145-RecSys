@@ -9,7 +9,7 @@ import torch
 import pyspark.sql.types as st
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
-from sdv.tabular import CopulaGAN, CTGAN, GaussianCopula, TVAE
+# from sdv.tabular import CopulaGAN, CTGAN, GaussianCopula, TVAE
 
 from sim4rec.utils.session_handler import State
 from sim4rec.params import (
@@ -175,6 +175,7 @@ class SDVDataGenerator(GeneratorBase, HasParallelizationLevel, HasDevice):
     """
     Synthetic data generator with a bunch of models from SDV library
     """
+    '''
     _model : Optional[Union[CopulaGAN, CTGAN, GaussianCopula, TVAE]] = None
 
     SEED_COLUMN_NAME = '__seed'
@@ -185,6 +186,7 @@ class SDVDataGenerator(GeneratorBase, HasParallelizationLevel, HasDevice):
         'gaussiancopula' : GaussianCopula,
         'tvae' : TVAE
     }
+    ''' 
 
     # pylint: disable=too-many-arguments
     def __init__(

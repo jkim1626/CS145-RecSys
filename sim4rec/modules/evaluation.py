@@ -15,7 +15,7 @@ from pyspark.ml.evaluation import (
     MulticlassClassificationEvaluator
 )
 
-from sdv.evaluation import evaluate
+# from sdv.evaluation import evaluate
 
 
 def evaluate_synthetic(
@@ -39,6 +39,8 @@ def evaluate_synthetic(
     :param real_df: Real data without any identifiers
     :return: Dictionary with metrics on synthetic data quality
     """
+
+    return {}
 
     result = evaluate(
         synthetic_data=synth_df.toPandas(),

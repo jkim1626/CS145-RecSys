@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - CS145 Competition{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="mb-0"><i class="fas fa-trophy"></i> Competition Leaderboard</h3>
+                <div>
+                    <span class="badge bg-light text-dark">{{ results|length }} Teams</span>
+                    <button class="btn btn-light btn-sm ms-2" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if results %}
+                    <div class="table-responsive leaderboard-table">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 60px;">Rank</th>
+                                    <th>Team Name</th>
+                                    <th>Test Discounted Revenue</th>
+                                    <th>Test Total Revenue</th>
+                                    <th>Test Avg Revenue</th>
+                                    <th>Performance Change</th>
+                                    <th>Test Precision@K</th>
+                                    <th>Test NDCG@K</th>
+                                    <th>Test MRR</th>
+                                    <th>Test Hit Rate</th>
+                                    <th>Submission Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr class="{% if loop.index <= 3 %}rank-{{ loop.index }}{% endif %}">
+                                    <td class="fw-bold">
+                                        {% if loop.index == 1 %}
+                                            <i class="fas fa-crown text-warning"></i>
+                                        {% elif loop.index == 2 %}
+                                            <i class="fas fa-medal text-secondary"></i>
+                                        {% elif loop.index == 3 %}
+                                            <i class="fas fa-medal" style="color: #cd7f32;"></i>
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </td>
+                                    <td class="fw-bold">{{ result[0] }}</td>
+                                    <td class="metric-value">{{ "%.4f"|format(result[3] or 0) }}</td>
+                                    <td>{{ "%.2f"|format(result[4] or 0) }}</td>
+                                    <td>{{ "%.2f"|format(result[5] or 0) }}</td>
+                                    <td class="{% if result[6] and result[6] > 0 %}text-success{% elif result[6] and result[6] < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                        {% if result[6] %}{{ "%.2f"|format(result[6]) }}%{% else %}N/A{% endif %}
+                                    </td>
+                                    <td>{{ "%.4f"|format(result[7] or 0) }}</td>
+                                    <td>{{ "%.4f"|format(result[8] or 0) }}</td>
+                                    <td>{{ "%.4f"|format(result[9] or 0) }}</td>
+                                    <td>{{ "%.4f"|format(result[10] or 0) }}</td>
+                                    <td class="text-muted small">{{ result[2] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-trophy fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Successful Submissions Yet</h4>
+                        <p class="text-muted">Be the first to submit a working recommender!</p>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Submit Your Solution
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<!-- Statistics Section -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ results|length }}</h3>
+                <p class="mb-0">Successful Submissions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ "%.4f"|format(results[0][3] if results else 0) }}</h3>
+                <p class="mb-0">Highest Score</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                {% set score_values = results|map(attribute=3)|list %}
+                <h3 class="text-info">{{ "%.4f"|format(score_values|average if score_values else 0) }}</h3>
+                <p class="mb-0">Average Score</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                {% set unique_teams = results|map(attribute=0)|list|unique|list %}
+                <h3 class="text-warning">{{ unique_teams|length if unique_teams else 0 }}</h3>
+                <p class="mb-0">Unique Teams</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metric Explanations -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Metric Explanations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><strong>Test Discounted Revenue</strong></h6>
+                        <p class="small">Primary ranking metric - revenue generated during testing phase with time-based discounting.</p>
+                        
+                        <h6><strong>Test Total Revenue</strong></h6>
+                        <p class="small">Total revenue generated across all test iterations.</p>
+                        
+                        <h6><strong>Test Avg Revenue</strong></h6>
+                        <p class="small">Average revenue per test iteration.</p>
+                        
+                        <h6><strong>Performance Change</strong></h6>
+                        <p class="small">Percentage change from training to testing phase performance.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><strong>Test Precision@K</strong></h6>
+                        <p class="small">Fraction of recommended items that are relevant in top-K recommendations.</p>
+                        
+                        <h6><strong>Test NDCG@K</strong></h6>
+                        <p class="small">Normalized Discounted Cumulative Gain - measures ranking quality.</p>
+                        
+                        <h6><strong>Test MRR</strong></h6>
+                        <p class="small">Mean Reciprocal Rank - measures how quickly relevant items are found.</p>
+                        
+                        <h6><strong>Test Hit Rate</strong></h6>
+                        <p class="small">Fraction of users who received at least one relevant recommendation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-refresh every 60 seconds
+setInterval(function() {
+    location.reload();
+}, 60000);
+
+// Add tooltips for metric values
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips if available
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+</script>
+{% endblock %} 
